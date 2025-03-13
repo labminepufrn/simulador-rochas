@@ -1,642 +1,445 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Formação de Rochas - DG/UFRN</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f0f2f5;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #f8f9fa;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    .institution {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 5px;
-    }
-    .title {
-      color: #3060b0;
-      font-size: 22px;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-    .rock-info {
-      background-color: white;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .rock-name {
-      font-size: 18px;
-      font-weight: bold;
-    }
-    .rock-type {
-      font-size: 14px;
-    }
-    .params {
-      text-align: right;
-      font-size: 12px;
-      color: #666;
-    }
-    .tabs {
-      display: flex;
-      margin-bottom: 15px;
-    }
-    .tab {
-      flex: 1;
-      text-align: center;
-      padding: 10px;
-      cursor: pointer;
-      background-color: #e9ecef;
-      color: #444;
-    }
-    .tab.active {
-      background-color: #3060b0;
-      color: white;
-    }
-    .tab:first-child {
-      border-radius: 5px 0 0 5px;
-    }
-    .tab:last-child {
-      border-radius: 0 5px 5px 0;
-    }
-    .content {
-      background-color: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .slider-container {
-      margin-bottom: 15px;
-    }
-    .slider-label {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 5px;
-    }
-    .slider {
-      width: 100%;
-    }
-    .slider-marks {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #666;
-      margin-top: 2px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .mineral-bar {
-      height: 25px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-    }
-    .mineral-name {
-      width: 120px;
-      font-size: 13px;
-      text-align: right;
-      padding-right: 10px;
-    }
-    .bar-container {
-      flex: 1;
-      background-color: #eee;
-      height: 15px;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .bar {
-      height: 100%;
-      background-color: #8884d8;
-    }
-    .bar-value {
-      font-size: 12px;
-      margin-left: 5px;
-    }
-    .process {
-      font-size: 13px;
-      line-height: 1.4;
-      margin-bottom: 15px;
-    }
-    .note {
-      background-color: #e6f0ff;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 12px;
-    }
-    .footer {
-      margin-top: 10px;
-      text-align: center;
-      font-size: 11px;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="institution">Laboratório de Mineralogia e Petrografia - DG/UFRN</div>
-      <div class="title">Simulador de Formação de Rochas</div>
-    </div>
-    
-    <div class="rock-info">
-      <div>
-        <div id="rockName" class="rock-name">Granito</div>
-        <div id="rockCategory" class="rock-type">Rocha Ígnea (Plutônica)</div>
-      </div>
-      <div class="params">
-        <div>T: <span id="tempValue">800</span>°C</div>
-        <div>P: <span id="pressValue">5</span> kbar</div>
-        <div>H₂O: <span id="waterValue">1</span>%</div>
-      </div>
-    </div>
-    
-    <div class="tabs">
-      <div id="controlsTab" class="tab active" onclick="switchTab('controls')">Parâmetros</div>
-      <div id="resultsTab" class="tab" onclick="switchTab('results')">Resultados</div>
-    </div>
-    
-    <div class="content">
-      <div id="controlsContent">
-        <div class="section-title">Condições de Formação</div>
-        
-        <div class="slider-container">
-          <label class="slider-label">Temperatura: <span id="tempLabel">800</span>°C</label>
-          <input id="tempSlider" type="range" min="25" max="1200" value="800" class="slider" oninput="updateTemperature()">
-          <div class="slider-marks">
-            <span>Ambiente</span>
-            <span>Sedimentar</span>
-            <span>Metamórfico</span>
-            <span>Magmático</span>
-          </div>
-        </div>
-        
-        <div class="slider-container">
-          <label class="slider-label">Pressão: <span id="pressLabel">5</span> kbar</label>
-          <input id="pressSlider" type="range" min="0" max="12" value="5" class="slider" oninput="updatePressure()">
-          <div class="slider-marks">
-            <span>Superfície</span>
-            <span>Manto</span>
-          </div>
-        </div>
-        
-        <div class="slider-container">
-          <label class="slider-label">Água: <span id="waterLabel">1</span>%</label>
-          <input id="waterSlider" type="range" min="0" max="10" value="1" class="slider" oninput="updateWater()">
-        </div>
-        
-        <div class="section-title">Composição Química (%)</div>
-        <div class="grid">
-          <div class="slider-container">
-            <label class="slider-label">SiO₂: <span id="silicaLabel">60</span>%</label>
-            <input id="silicaSlider" type="range" min="0" max="100" value="60" class="slider" oninput="updateComposition('silica')">
-          </div>
-          <div class="slider-container">
-            <label class="slider-label">Al₂O₃: <span id="alumLabel">15</span>%</label>
-            <input id="alumSlider" type="range" min="0" max="50" value="15" class="slider" oninput="updateComposition('alum')">
-          </div>
-          <div class="slider-container">
-            <label class="slider-label">FeO: <span id="ironLabel">5</span>%</label>
-            <input id="ironSlider" type="range" min="0" max="50" value="5" class="slider" oninput="updateComposition('iron')">
-          </div>
-          <div class="slider-container">
-            <label class="slider-label">MgO: <span id="mgLabel">5</span>%</label>
-            <input id="mgSlider" type="range" min="0" max="50" value="5" class="slider" oninput="updateComposition('mg')">
-          </div>
-          <div class="slider-container">
-            <label class="slider-label">CaO: <span id="caLabel">5</span>%</label>
-            <input id="caSlider" type="range" min="0" max="50" value="5" class="slider" oninput="updateComposition('ca')">
-          </div>
-          <div class="slider-container">
-            <label class="slider-label">Na₂O: <span id="naLabel">3</span>%</label>
-            <input id="naSlider" type="range" min="0" max="50" value="3" class="slider" oninput="updateComposition('na')">
-          </div>
-          <div class="slider-container">
-            <label class="slider-label">K₂O: <span id="kLabel">4</span>%</label>
-            <input id="kSlider" type="range" min="0" max="50" value="4" class="slider" oninput="updateComposition('k')">
-          </div>
-          <div class="slider-container">
-            <label class="slider-label">Outros: <span id="otherLabel">3</span>%</label>
-            <input id="otherSlider" type="range" min="0" max="50" value="3" class="slider" oninput="updateComposition('other')">
-          </div>
-        </div>
-      </div>
-      
-      <div id="resultsContent" style="display:none;">
-        <div class="section-title">Composição Mineralógica</div>
-        <div id="mineralsChart"></div>
-        
-        <div class="section-title">Processo de Formação</div>
-        <div id="processDescription" class="process"></div>
-        
-        <div class="note">
-          <strong>Nota:</strong> Compare os resultados desta simulação com amostras reais para entender melhor as variações naturais.
-        </div>
-      </div>
-    </div>
-    
-    <div class="footer">
-      Simulador desenvolvido para fins educacionais. Vilalva, F.C.J. & Toledo, P.I.F. (2025). Departamento de Geologia-UFRN.
-    </div>
-  </div>
+// Parâmetros de formação
+let temperature = 800;
+let pressure = 5;
+let waterContent = 1;
+let composition = {
+  silica: 70,    // SiO₂ - Ajustado para granito
+  alum: 14,      // Al₂O₃
+  iron: 3,       // FeO
+  mg: 1,         // MgO
+  ca: 2,         // CaO
+  na: 3,         // Na₂O
+  k: 4,          // K₂O
+  other: 3       // Outros
+};
 
-  <script>
-    // Parâmetros de formação
-    let temperature = 800;
-    let pressure = 5;
-    let waterContent = 1;
-    let composition = {
-      silica: 60,    // SiO₂
-      alum: 15,      // Al₂O₃
-      iron: 5,       // FeO
-      mg: 5,         // MgO
-      ca: 5,         // CaO
-      na: 3,         // Na₂O
-      k: 4,          // K₂O
-      other: 3       // Outros
-    };
-    
-    // Resultado da simulação
-    let rockType = '';
-    let minerals = [];
-    let processDescription = '';
-    
-    // Mudança de abas
-    function switchTab(tab) {
-      if (tab === 'controls') {
-        document.getElementById('controlsTab').classList.add('active');
-        document.getElementById('resultsTab').classList.remove('active');
-        document.getElementById('controlsContent').style.display = 'block';
-        document.getElementById('resultsContent').style.display = 'none';
-      } else {
-        document.getElementById('controlsTab').classList.remove('active');
-        document.getElementById('resultsTab').classList.add('active');
-        document.getElementById('controlsContent').style.display = 'none';
-        document.getElementById('resultsContent').style.display = 'block';
-      }
-    }
-    
-    // Atualizar temperatura
-    function updateTemperature() {
-      temperature = parseInt(document.getElementById('tempSlider').value);
-      document.getElementById('tempLabel').textContent = temperature;
-      document.getElementById('tempValue').textContent = temperature;
-      simulateRockFormation();
-    }
-    
-    // Atualizar pressão
-    function updatePressure() {
-      pressure = parseInt(document.getElementById('pressSlider').value);
-      document.getElementById('pressLabel').textContent = pressure;
-      document.getElementById('pressValue').textContent = pressure;
-      simulateRockFormation();
-    }
-    
-    // Atualizar conteúdo de água
-    function updateWater() {
-      waterContent = parseInt(document.getElementById('waterSlider').value);
-      document.getElementById('waterLabel').textContent = waterContent;
-      document.getElementById('waterValue').textContent = waterContent;
-      simulateRockFormation();
-    }
-    
-    // Atualizar composição química
-    function updateComposition(mineral) {
-      const value = parseInt(document.getElementById(mineral + 'Slider').value);
-      document.getElementById(mineral + 'Label').textContent = value;
-      
-      // Calcular diferença
-      const diff = value - composition[mineral];
-      if (diff === 0) return;
-      
-      // Atualizar valor no objeto de composição
-      composition[mineral] = value;
-      
-      // Ajustar outros minerais proporcionalmente
-      const otherMinerals = Object.keys(composition).filter(m => m !== mineral);
-      const totalOther = otherMinerals.reduce((sum, m) => sum + composition[m], 0);
-      
-      if (totalOther + diff <= 0) return;
-      
-      otherMinerals.forEach(m => {
-        const ratio = composition[m] / totalOther;
-        composition[m] = Math.max(0, Math.round(composition[m] - (diff * ratio)));
-        document.getElementById(m + 'Slider').value = composition[m];
-        document.getElementById(m + 'Label').textContent = composition[m];
-      });
-      
-      simulateRockFormation();
-    }
-    
-    // Determinar tipo de rocha
-    function determineRockType() {
-      // Ígneas
-      if (temperature > 650) {
-        if (composition.silica > 69) {
-          if (pressure < 3) return "Riolito";
-          return "Granito";
-        } else if (composition.silica > 63 && composition.silica <= 69) {
-          if (pressure < 3) return "Dacito";
-          return "Granodiorito";
-        } else if (composition.silica > 52 && composition.silica <= 63) {
-          if (pressure < 3) return "Andesito";
-          return "Diorito";
-        } else if (composition.silica > 45 && composition.silica <= 52) {
-          if (pressure < 3) return "Basalto";
-          return "Gabro";
-        } else {
-          return "Ultramáfica";
-        }
-      } 
-      // Sedimentares
-      else if (temperature < 200 && pressure < 2) {
-        if (composition.silica > 80 && composition.silica > 8) {
-          if (composition.silica > 90) return "Conglomerado"; 
-          return "Arenito";
-        }
-        else if (composition.silica > 50 && composition.silica <= 80) return "Siltito";
-        else if (composition.alum > 25) return "Argilito";
-        else if (composition.ca > 30) return "Calcário";
-        else if (composition.ca > 20 && waterContent < 1) return "Evaporito";
-        else return "Siltito";
-      } 
-      // Metamórficas
-      else {
-        if (composition.silica > 65) {
-          if (temperature < 300) return "Ardósia";
-          else if (temperature < 450) return "Quartzito";
-          else return "Gnaisse";
-        } else if (composition.alum > 20) {
-          if (temperature < 350) return "Ardósia";
-          else if (temperature < 500) return "Filito";
-          else return "Xisto";
-        } else if (composition.ca > 30) {
-          return "Mármore";
-        } else {
-          return "Gnaisse";
-        }
-      }
-    }
-    
-    // Determinar minerais
-    function determineMinerals(rockType) {
-      // Mapeamento completo de todos os tipos de rochas para seus minerais característicos
-      const mineralMaps = {
-        // Rochas Ígneas
-        "Granito": [
-          { name: "Quartzo", percentage: 25 + Math.floor((composition.silica - 65) / 2) },
-          { name: "Feldspato K", percentage: 15 + Math.floor(composition.k * 5) },
-          { name: "Plagioclásio", percentage: 10 + Math.floor((composition.na + composition.ca) / 2) },
-          { name: "Biotita", percentage: 5 + Math.floor(composition.iron) },
-          { name: "Muscovita", percentage: 2 + Math.floor(composition.alum / 5) }
-        ],
-        "Granodiorito": [
-          { name: "Quartzo", percentage: 20 + Math.floor((composition.silica - 60) / 2) },
-          { name: "Feldspato K", percentage: 5 + Math.floor(composition.k * 3) },
-          { name: "Plagioclásio", percentage: 35 + Math.floor((composition.na + composition.ca) / 2) },
-          { name: "Biotita", percentage: 5 + Math.floor(composition.iron) },
-          { name: "Anfibólio", percentage: 5 + Math.floor(composition.mg * 2) }
-        ],
-        "Diorito": [
-          { name: "Plagioclásio", percentage: 50 + Math.floor(composition.na / 2) },
-          { name: "Anfibólio", percentage: 20 + Math.floor(composition.mg * 3) },
-          { name: "Biotita", percentage: 5 + Math.floor(composition.iron / 2) },
-          { name: "Quartzo", percentage: Math.min(5, Math.floor(composition.silica / 15)) },
-          { name: "Piroxênio", percentage: 5 + Math.floor(composition.mg / 2) }
-        ],
-        "Gabro": [
-          { name: "Plagioclásio", percentage: 50 + Math.floor(composition.ca / 3) },
-          { name: "Piroxênio", percentage: 25 + Math.floor(composition.mg * 3) },
-          { name: "Olivina", percentage: Math.min(10, Math.floor(composition.mg / 3)) },
-          { name: "Magnetita", percentage: 5 + Math.floor(composition.iron / 3) }
-        ],
-        "Ultramáfica": [
-          { name: "Olivina", percentage: 40 + Math.floor(composition.mg / 2) },
-          { name: "Piroxênio", percentage: 10 + Math.floor(composition.mg / 3) },
-          { name: "Anfibólio", percentage: Math.min(5, Math.floor(composition.iron / 2)) },
-          { name: "Plagioclásio", percentage: Math.min(5, Math.floor(composition.ca / 5)) },
-          { name: "Cromita", percentage: 2 + Math.floor(composition.iron / 5) }
-        ],
-        "Basalto": [
-          { name: "Plagioclásio", percentage: 40 + Math.floor(composition.ca / 3) },
-          { name: "Piroxênio", percentage: 20 + Math.floor(composition.mg * 2) },
-          { name: "Olivina", percentage: Math.min(10, Math.floor(composition.mg / 2)) },
-          { name: "Magnetita", percentage: 5 + Math.floor(composition.iron / 3) }
-        ],
-        "Andesito": [
-          { name: "Plagioclásio", percentage: 50 + Math.floor(composition.na / 2) },
-          { name: "Anfibólio", percentage: 10 + Math.floor(composition.mg * 2) },
-          { name: "Piroxênio", percentage: 10 + Math.floor(composition.iron / 2) },
-          { name: "Biotita", percentage: Math.min(10, Math.floor(composition.k * 2)) },
-          { name: "Quartzo", percentage: Math.min(5, Math.floor((composition.silica - 55) / 2)) }
-        ],
-        "Dacito": [
-          { name: "Plagioclásio", percentage: 40 + Math.floor(composition.na / 2) },
-          { name: "Quartzo", percentage: 20 + Math.floor((composition.silica - 64) / 2) },
-          { name: "Anfibólio", percentage: 5 + Math.floor(composition.mg * 3) },
-          { name: "Biotita", percentage: 5 + Math.floor(composition.iron) },
-          { name: "Feldspato K", percentage: Math.min(10, Math.floor(composition.k * 2)) }
-        ],
-        "Riolito": [
-          { name: "Quartzo", percentage: 20 + Math.floor((composition.silica - 69) / 2) },
-          { name: "Feldspato K", percentage: 5 + Math.floor(composition.k * 3) },
-          { name: "Plagioclásio", percentage: 10 + Math.floor(composition.na * 2) },
-          { name: "Biotita", percentage: Math.min(10, Math.floor(composition.iron * 2)) },
-          { name: "Vidro vulcânico", percentage: 10 + Math.floor((100 - temperature) / 20) }
-        ],
-        
-        // Rochas Sedimentares
-        "Arenito": [
-          { name: "Quartzo", percentage: 60 + Math.floor(composition.silica / 10) },
-          { name: "Feldspato", percentage: 10 + Math.floor((composition.k + composition.na) / 2) },
-          { name: "Fragmentos líticos", percentage: 15 + Math.floor(composition.other * 2) },
-          { name: "Argilominerais", percentage: Math.min(15, Math.floor(composition.alum / 5)) },
-          { name: "Cimento", percentage: 5 + Math.floor(composition.ca / 2) }
-        ],
-        "Conglomerado": [
-          { name: "Quartzo", percentage: 60 + Math.floor(composition.silica / 6) },
-          { name: "Fragmentos líticos", percentage: 20 + Math.floor(composition.other * 2) },
-          { name: "Feldspato", percentage: 10 + Math.floor(composition.k / 2) },
-          { name: "Cimento", percentage: 5 + Math.floor(composition.ca) }
-        ],
-        "Argilito": [
-          { name: "Argilominerais", percentage: 50 + Math.floor(composition.alum / 2) },
-          { name: "Quartzo", percentage: 20 + Math.floor(composition.silica / 10) },
-          { name: "Feldspato", percentage: 5 + Math.floor((composition.k + composition.na) / 3) },
-          { name: "Óxidos de Ferro", percentage: 5 + Math.floor(composition.iron / 2) }
-        ],
-        "Siltito": [
-          { name: "Quartzo", percentage: 50 + Math.floor(composition.silica / 5) },
-          { name: "Argilominerais", percentage: 20 + Math.floor(composition.alum / 3) },
-          { name: "Feldspato", percentage: 10 + Math.floor((composition.k + composition.na) / 3) },
-          { name: "Óxidos de Fe", percentage: 5 + Math.floor(composition.iron / 2) }
-        ],
-        "Calcário": [
-          { name: "Calcita", percentage: 80 + Math.floor(composition.ca / 3) },
-          { name: "Dolomita", percentage: Math.min(50, Math.floor(composition.mg * 5)) },
-          { name: "Quartzo", percentage: Math.min(5, Math.floor(composition.silica / 10)) },
-          { name: "Argilominerais", percentage: Math.min(10, Math.floor(composition.alum / 5)) }
-        ],
-        "Evaporito": [
-          { name: "Gipsita", percentage: 40 + Math.floor(composition.ca / 2) },
-          { name: "Halita", percentage: 30 + Math.floor(composition.na / 2) },
-          { name: "Calcita", percentage: 10 + Math.floor(composition.ca / 5) },
-          { name: "Impurezas", percentage: 5 + Math.floor(composition.other * 2) }
-        ],
-        
-        // Rochas Metamórficas
-        "Mármore": [
-          { name: "Calcita", percentage: 80 + Math.floor(composition.ca / 3) },
-          { name: "Dolomita", percentage: 15 + Math.floor(composition.mg * 5) },
-          { name: "Quartzo", percentage: Math.min(5, Math.floor(composition.silica / 15)) },
-          { name: "Minerais acessórios", percentage: 3 + Math.floor(composition.other * 2) }
-        ],
-        "Quartzito": [
-          { name: "Quartzo", percentage: 85 + Math.floor(composition.silica / 5) },
-          { name: "Muscovita", percentage: Math.min(5, Math.floor(composition.k * 2)) },
-          { name: "Feldspato", percentage: Math.min(5, Math.floor((composition.na + composition.k) / 4)) },
-          { name: "Óxidos de Fe", percentage: Math.min(3, Math.floor(composition.iron / 3)) }
-        ],
-        "Ardósia": [
-          { name: "Argilominerais", percentage: 40 + Math.floor(composition.alum / 2) },
-          { name: "Quartzo", percentage: 40 + Math.floor(composition.silica / 5) },
-          { name: "Clorita", percentage: 5 + Math.floor(composition.mg * 3) },
-          { name: "Sericita", percentage: 5 + Math.floor(composition.k * 2) }
-        ],
-        "Filito": [
-          { name: "Sericita", percentage: 20 + Math.floor(composition.k * 3) },
-          { name: "Quartzo", percentage: 33 + Math.floor(composition.silica / 5) },
-          { name: "Clorita", percentage: 6 + Math.floor(composition.mg * 2) },
-          { name: "Plagioclásio", percentage: 12 + Math.floor(composition.na * 2) }
-        ],
-        "Xisto": [
-          { name: "Quartzo", percentage: 50 + Math.floor(composition.silica / 5) },
-          { name: "Muscovita", percentage: 5 + Math.floor(composition.k * 3) },
-          { name: "Biotita", percentage: 5 + Math.floor(composition.iron * 2) },
-          { name: "Granada", percentage: Math.min(15, Math.floor((composition.iron + composition.mg) / 3)) },
-          { name: "Estaurolita", percentage: Math.min(10, Math.floor(temperature / 80)) }
-        ],
-        "Gnaisse": [
-          { name: "Quartzo", percentage: 20 + Math.floor(composition.silica / 4) },
-          { name: "Feldspato K", percentage: 15 + Math.floor(composition.k * 5) },
-          { name: "Plagioclásio", percentage: 15 + Math.floor(composition.na * 5) },
-          { name: "Biotita", percentage: 5 + Math.floor(composition.iron * 2) },
-          { name: "Granada", percentage: Math.min(10, Math.floor((composition.iron + composition.mg) / 5)) }
-        ]
-      };
+// Resultado da simulação
+let rockType = '';
+let minerals = [];
+let processDescription = '';
 
-      // Retornar minerais para o tipo de rocha especificado, ou minerais genéricos se não for encontrado
-      return mineralMaps[rockType] || [
-        { name: "Minerais silicáticos", percentage: Math.floor(composition.silica / 2) },
-        { name: "Minerais aluminosos", percentage: Math.floor(composition.alum / 2) },
-        { name: "Minerais ferrosos", percentage: Math.floor(composition.iron * 2) },
-        { name: "Minerais cálcicos", percentage: Math.floor(composition.ca * 2) },
-        { name: "Outros minerais", percentage: 10 + Math.floor(composition.other * 3) }
-      ];
+// Mudança de abas
+function switchTab(tab) {
+  if (tab === 'controls') {
+    document.getElementById('controlsTab').classList.add('active');
+    document.getElementById('resultsTab').classList.remove('active');
+    document.getElementById('controlsContent').style.display = 'block';
+    document.getElementById('resultsContent').style.display = 'none';
+  } else {
+    document.getElementById('controlsTab').classList.remove('active');
+    document.getElementById('resultsTab').classList.add('active');
+    document.getElementById('controlsContent').style.display = 'none';
+    document.getElementById('resultsContent').style.display = 'block';
+  }
+}
+
+// Atualizar temperatura
+function updateTemperature() {
+  temperature = parseInt(document.getElementById('tempSlider').value);
+  document.getElementById('tempLabel').textContent = temperature;
+  document.getElementById('tempValue').textContent = temperature;
+  simulateRockFormation();
+}
+
+// Atualizar pressão
+function updatePressure() {
+  pressure = parseInt(document.getElementById('pressSlider').value);
+  document.getElementById('pressLabel').textContent = pressure;
+  document.getElementById('pressValue').textContent = pressure;
+  simulateRockFormation();
+}
+
+// Atualizar conteúdo de água
+function updateWater() {
+  waterContent = parseInt(document.getElementById('waterSlider').value);
+  document.getElementById('waterLabel').textContent = waterContent;
+  document.getElementById('waterValue').textContent = waterContent;
+  simulateRockFormation();
+}
+
+// Atualizar composição química
+function updateComposition(mineral) {
+  const value = parseInt(document.getElementById(mineral + 'Slider').value);
+  document.getElementById(mineral + 'Label').textContent = value;
+  
+  // Calcular diferença
+  const diff = value - composition[mineral];
+  if (diff === 0) return;
+  
+  // Atualizar valor no objeto de composição
+  composition[mineral] = value;
+  
+  // Ajustar outros minerais proporcionalmente
+  const otherMinerals = Object.keys(composition).filter(m => m !== mineral);
+  const totalOther = otherMinerals.reduce((sum, m) => sum + composition[m], 0);
+  
+  if (totalOther + diff <= 0) return;
+  
+  otherMinerals.forEach(m => {
+    const ratio = composition[m] / totalOther;
+    composition[m] = Math.max(0, Math.round(composition[m] - (diff * ratio)));
+    document.getElementById(m + 'Slider').value = composition[m];
+    document.getElementById(m + 'Label').textContent = composition[m];
+  });
+  
+  simulateRockFormation();
+}
+
+// Determinar tipo de rocha - Atualizado com novos intervalos de P-T
+function determineRockType() {
+  // Ígneas
+  if (temperature >= 600) {
+    // Rochas ultramáficas (peridotito)
+    if (temperature > 1000 && pressure > 5 && composition.silica < 45) {
+      return "Ultramáfica";
     }
-    
-    // Gerar descrição do processo
-    function generateProcessDescription(rockType) {
-      if (temperature > 650) {
-        if (rockType === "Ultramáfica") {
-          return `Magma ultramáfico com ${temperature}°C e ${pressure} kbar, extremamente rico em magnésio (MgO>${composition.mg}%) e pobre em sílica (SiO₂~${composition.silica}%). Esta composição é típica de magmas do manto superior, formando rochas com abundância de minerais ferromagnesianos como olivina e piroxênio.`;
-        } else if (pressure < 3) {
-          return `Este magma com ${temperature}°C e baixa pressão (${pressure} kbar) solidificou rapidamente próximo ou na superfície terrestre, formando uma rocha ígnea vulcânica com SiO₂~${composition.silica}%. O resfriamento rápido resultou em cristais finos, textura afanítica ou vítrea.`;
-        } else {
-          return `Este magma com ${temperature}°C resfriou lentamente em alta pressão (${pressure} kbar) abaixo da superfície terrestre, permitindo a formação de cristais bem desenvolvidos. Esta intrusão magmática formou uma rocha ígnea plutônica com SiO₂~${composition.silica}%.`;
-        }
-      } else if (temperature < 200 && pressure < 2) {
-        return `Material sedimentar depositado em um ambiente de baixa temperatura (${temperature}°C) e baixa pressão (${pressure} kbar). A compactação e cimentação dos sedimentos formaram esta rocha sedimentar com composição predominante de ${composition.silica > 70 ? 'sílica' : composition.ca > 30 ? 'carbonato de cálcio' : 'argilominerais'}.`;
+    // Rochas máficas
+    else if (composition.silica >= 45 && composition.silica <= 52) {
+      if (pressure < 4) return "Basalto";
+      return "Gabro";
+    }
+    // Rochas intermediárias - Andesito/Diorito
+    else if (composition.silica > 52 && composition.silica <= 63) {
+      if (pressure < 5) return "Andesito";
+      return "Diorito";
+    }
+    // Rochas intermediárias - Dacito/Granodiorito
+    else if (composition.silica > 63 && composition.silica <= 69) {
+      if (pressure < 4) return "Dacito";
+      return "Granodiorito";
+    }
+    // Rochas félsicas
+    else if (composition.silica > 69) {
+      if (pressure < 3) return "Riolito";
+      return "Granito";
+    }
+  } 
+  // Sedimentares
+  else if (temperature < 50 && pressure < 1) {
+    if (composition.silica > 90) {
+      return "Conglomerado";
+    }
+    else if (composition.silica > 70) {
+      return "Arenito";
+    }
+    else if (composition.silica > 65) {
+      return "Siltito";
+    }
+    else if (composition.alum > 16) {
+      return "Argilito";
+    }
+    else if (composition.ca > 50) {
+      return "Calcário";
+    }
+    else if (composition.ca > 30 && waterContent < 1) {
+      if (composition.na > 50) {
+        return "Evaporito de Halita";
       } else {
-        return `Rocha pré-existente submetida a temperatura moderada a alta (${temperature}°C) e pressão elevada (${pressure} kbar), causando recristalização metamórfica. Este metamorfismo ocorreu provavelmente em zona de ${pressure > 8 ? 'subducção' : pressure > 5 ? 'colisão continental' : 'metamorfismo regional'}.`;
+        return "Evaporito de Gipsita";
       }
     }
-    
-    // Renderizar gráfico de minerais
-    function renderMineralChart() {
-      const chart = document.getElementById('mineralsChart');
-      chart.innerHTML = '';
-      
-      minerals.forEach(mineral => {
-        const barContainer = document.createElement('div');
-        barContainer.className = 'mineral-bar';
-        
-        const nameLabel = document.createElement('div');
-        nameLabel.className = 'mineral-name';
-        nameLabel.textContent = mineral.name;
-        
-        const barOuter = document.createElement('div');
-        barOuter.className = 'bar-container';
-        
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.width = mineral.percentage + '%';
-        
-        const valueLabel = document.createElement('div');
-        valueLabel.className = 'bar-value';
-        valueLabel.textContent = mineral.percentage + '%';
-        
-        barOuter.appendChild(bar);
-        barContainer.appendChild(nameLabel);
-        barContainer.appendChild(barOuter);
-        barContainer.appendChild(valueLabel);
-        
-        chart.appendChild(barContainer);
-      });
+    else {
+      return "Siltito";
     }
-    
-    // Simular formação da rocha
-    function simulateRockFormation() {
-      rockType = determineRockType();
-      minerals = determineMinerals(rockType);
-      processDescription = generateProcessDescription(rockType);
-      
-      // Atualizar interface
-      document.getElementById('rockName').textContent = rockType;
-      
-      let category = '';
-      if (temperature > 650) {
-        category = 'Rocha Ígnea' + (pressure < 3 ? ' (Vulcânica)' : ' (Plutônica)');
-      } else if (temperature < 200 && pressure < 2) {
-        category = 'Rocha Sedimentar';
-      } else {
-        category = 'Rocha Metamórfica';
+  } 
+  // Metamórficas
+  else {
+    if (temperature < 400) {
+      return "Ardósia";
+    }
+    else if (temperature < 500) {
+      return "Filito";
+    }
+    else if (temperature < 650) {
+      if (composition.silica > 90) {
+        return "Quartzito";
       }
-      
-      document.getElementById('rockCategory').textContent = category;
-      document.getElementById('processDescription').textContent = processDescription;
-      renderMineralChart();
+      else if (composition.ca > 50) {
+        return "Mármore";
+      }
+      return "Xisto";
+    }
+    else {
+      if (composition.silica > 90) {
+        return "Quartzito";
+      }
+      else if (composition.ca > 50) {
+        return "Mármore";
+      }
+      return "Gnaisse";
+    }
+  }
+}
+
+// Determinar minerais - Atualizado com dados mineralógicos
+function determineMinerals(rockType) {
+  // Mapeamento completo de todos os tipos de rochas para seus minerais característicos
+  const mineralMaps = {
+    // Rochas Ígneas
+    "Granito": [
+      { name: "Quartzo", percentage: 20 + Math.min(40, Math.floor((composition.silica - 65) / 2)) },
+      { name: "Feldspato K", percentage: 10 + Math.min(30, Math.floor(composition.k * 5)) },
+      { name: "Plagioclásio", percentage: 10 + Math.min(20, Math.floor((composition.na + composition.ca) / 2)) },
+      { name: "Biotita", percentage: Math.min(15, Math.floor(composition.iron + composition.mg)) },
+      { name: "Muscovita", percentage: Math.min(5, Math.floor(composition.alum / 4)) }
+    ],
+    "Granodiorito": [
+      { name: "Quartzo", percentage: 20 + Math.min(15, Math.floor((composition.silica - 60) / 2)) },
+      { name: "Feldspato K", percentage: 5 + Math.min(10, Math.floor(composition.k * 3)) },
+      { name: "Plagioclásio", percentage: 35 + Math.min(25, Math.floor((composition.na + composition.ca) / 2)) },
+      { name: "Biotita", percentage: Math.min(15, Math.floor(composition.iron)) },
+      { name: "Anfibólio", percentage: Math.min(15, Math.floor(composition.mg * 3)) }
+    ],
+    "Diorito": [
+      { name: "Plagioclásio", percentage: 50 + Math.min(20, Math.floor(composition.na / 2)) },
+      { name: "Anfibólio", percentage: 20 + Math.min(20, Math.floor(composition.mg * 3)) },
+      { name: "Biotita", percentage: Math.min(15, Math.floor(composition.iron / 2)) },
+      { name: "Quartzo", percentage: Math.min(5, Math.floor(composition.silica / 15)) },
+      { name: "Piroxênio", percentage: Math.min(15, Math.floor(composition.mg / 2)) }
+    ],
+    "Gabro": [
+      { name: "Plagioclásio", percentage: 50 + Math.min(15, Math.floor(composition.ca / 3)) },
+      { name: "Piroxênio", percentage: 25 + Math.min(15, Math.floor(composition.mg * 3)) },
+      { name: "Olivina", percentage: Math.min(10, Math.floor(composition.mg / 3)) },
+      { name: "Magnetita", percentage: Math.min(5, Math.floor(composition.iron / 3)) }
+    ],
+    "Ultramáfica": [
+      { name: "Olivina", percentage: 40 + Math.min(30, Math.floor(composition.mg / 2)) },
+      { name: "Piroxênio", percentage: 10 + Math.min(30, Math.floor(composition.mg / 3)) },
+      { name: "Espinélio", percentage: Math.min(5, Math.floor(composition.iron / 4)) },
+      { name: "Cromita", percentage: Math.min(5, Math.floor(composition.iron / 5)) }
+    ],
+    "Basalto": [
+      { name: "Plagioclásio", percentage: 40 + Math.min(10, Math.floor(composition.ca / 3)) },
+      { name: "Piroxênio", percentage: 20 + Math.min(20, Math.floor(composition.mg * 2)) },
+      { name: "Olivina", percentage: Math.min(10, Math.floor(composition.mg / 2)) },
+      { name: "Magnetita", percentage: Math.min(5, Math.floor(composition.iron / 3)) }
+    ],
+    "Andesito": [
+      { name: "Plagioclásio", percentage: 50 + Math.min(20, Math.floor(composition.na / 2)) },
+      { name: "Anfibólio", percentage: 10 + Math.min(20, Math.floor(composition.mg * 2)) },
+      { name: "Piroxênio", percentage: 10 + Math.min(10, Math.floor(composition.iron / 2)) },
+      { name: "Biotita", percentage: Math.min(10, Math.floor(composition.k * 2)) },
+      { name: "Quartzo", percentage: Math.min(5, Math.floor((composition.silica - 55) / 2)) }
+    ],
+    "Dacito": [
+      { name: "Plagioclásio", percentage: 40 + Math.min(20, Math.floor(composition.na / 2)) },
+      { name: "Quartzo", percentage: 20 + Math.min(15, Math.floor((composition.silica - 64) / 2)) },
+      { name: "Anfibólio", percentage: Math.min(5, Math.floor(composition.mg * 3)) },
+      { name: "Biotita", percentage: Math.min(5, Math.floor(composition.iron)) },
+      { name: "Feldspato K", percentage: Math.min(20, Math.floor(composition.k * 2)) }
+    ],
+    "Riolito": [
+      { name: "Quartzo", percentage: 20 + Math.min(15, Math.floor((composition.silica - 69) / 2)) },
+      { name: "Feldspato K", percentage: 5 + Math.min(15, Math.floor(composition.k * 3)) },
+      { name: "Plagioclásio", percentage: 10 + Math.min(20, Math.floor(composition.na * 2)) },
+      { name: "Biotita", percentage: Math.min(10, Math.floor(composition.iron * 2)) },
+      { name: "Vidro vulcânico", percentage: 10 + Math.min(20, Math.floor((100 - temperature) / 20)) }
+    ],
+    
+    // Rochas Sedimentares
+    "Arenito": [
+      { name: "Quartzo", percentage: 60 + Math.min(15, Math.floor(composition.silica / 10)) },
+      { name: "Feldspato", percentage: 10 + Math.min(15, Math.floor((composition.k + composition.na) / 2)) },
+      { name: "Fragmentos líticos", percentage: Math.min(20, Math.floor(composition.other * 2)) },
+      { name: "Argilominerais", percentage: Math.min(15, Math.floor(composition.alum / 5)) },
+      { name: "Cimento", percentage: Math.min(5, Math.floor(composition.ca / 2)) }
+    ],
+    "Conglomerado": [
+      { name: "Quartzo", percentage: Math.min(60, Math.floor(composition.silica / 2)) },
+      { name: "Fragmentos líticos", percentage: 30 + Math.min(30, Math.floor(composition.other * 3)) },
+      { name: "Feldspato", percentage: Math.min(10, Math.floor(composition.k / 2)) },
+      { name: "Cimento", percentage: Math.min(5, Math.floor(composition.ca)) }
+    ],
+    "Argilito": [
+      { name: "Argilominerais", percentage: 50 + Math.min(8, Math.floor(composition.alum / 2)) },
+      { name: "Quartzo", percentage: Math.min(28, Math.floor(composition.silica / 10)) },
+      { name: "Feldspato", percentage: Math.min(6, Math.floor((composition.k + composition.na) / 3)) },
+      { name: "Óxidos de Ferro", percentage: Math.min(8, Math.floor(composition.iron / 2)) }
+    ],
+    "Siltito": [
+      { name: "Quartzo", percentage: 50 + Math.min(30, Math.floor(composition.silica / 5)) },
+      { name: "Argilominerais", percentage: 20 + Math.min(30, Math.floor(composition.alum / 3)) },
+      { name: "Feldspato", percentage: Math.min(10, Math.floor((composition.k + composition.na) / 3)) },
+      { name: "Óxidos de Fe", percentage: Math.min(6, Math.floor(composition.iron / 2)) }
+    ],
+    "Calcário": [
+      { name: "Calcita", percentage: 80 + Math.min(20, Math.floor(composition.ca / 3)) },
+      { name: "Dolomita", percentage: Math.min(50, Math.floor(composition.mg * 10)) },
+      { name: "Quartzo", percentage: Math.min(5, Math.floor(composition.silica / 15)) },
+      { name: "Argilominerais", percentage: Math.min(10, Math.floor(composition.alum / 5)) }
+    ],
+    "Evaporito de Gipsita": [
+      { name: "Gipsita", percentage: 80 + Math.min(20, Math.floor(composition.ca / 2)) },
+      { name: "Anidrita", percentage: Math.min(10, Math.floor(composition.ca / 5)) },
+      { name: "Impurezas", percentage: Math.min(10, Math.floor(composition.other * 2)) }
+    ],
+    "Evaporito de Halita": [
+      { name: "Halita", percentage: 90 + Math.min(9, Math.floor(composition.na / 10)) },
+      { name: "Silvita", percentage: Math.min(5, Math.floor(composition.k / 10)) },
+      { name: "Impurezas", percentage: Math.min(5, Math.floor(composition.other * 2)) }
+    ],
+    
+    // Rochas Metamórficas
+    "Mármore": [
+      { name: "Calcita", percentage: 80 + Math.min(20, Math.floor(composition.ca / 3)) },
+      { name: "Dolomita", percentage: Math.min(15, Math.floor(composition.mg * 5)) },
+      { name: "Quartzo", percentage: Math.min(5, Math.floor(composition.silica / 15)) },
+      { name: "Minerais acessórios", percentage: Math.min(3, Math.floor(composition.other * 2)) }
+    ],
+    "Quartzito": [
+      { name: "Quartzo", percentage: 85 + Math.min(14, Math.floor(composition.silica / 5)) },
+      { name: "Muscovita", percentage: Math.min(5, Math.floor(composition.k * 2)) },
+      { name: "Feldspato", percentage: Math.min(5, Math.floor((composition.na + composition.k) / 4)) },
+      { name: "Óxidos de Fe", percentage: Math.min(3, Math.floor(composition.iron / 3)) }
+    ],
+    "Ardósia": [
+      { name: "Argilominerais", percentage: 40 + Math.min(20, Math.floor(composition.alum / 2)) },
+      { name: "Quartzo", percentage: 40 + Math.min(20, Math.floor(composition.silica / 10)) },
+      { name: "Clorita", percentage: Math.min(5, Math.floor(composition.mg * 3)) },
+      { name: "Sericita", percentage: Math.min(5, Math.floor(composition.k * 2)) }
+    ],
+    "Filito": [
+      { name: "Sericita", percentage: 20 + Math.min(20, Math.floor(composition.k * 3)) },
+      { name: "Quartzo", percentage: 33 + Math.min(27, Math.floor(composition.silica / 5)) },
+      { name: "Clorita", percentage: Math.min(10, Math.floor(composition.mg * 2)) },
+      { name: "Plagioclásio", percentage: Math.min(15, Math.floor(composition.na * 2)) }
+    ],
+    "Xisto": [
+      { name: "Quartzo", percentage: 50 + Math.min(20, Math.floor(composition.silica / 5)) },
+      { name: "Muscovita", percentage: Math.min(20, Math.floor(composition.k * 3)) },
+      { name: "Biotita", percentage: Math.min(15, Math.floor(composition.iron * 2)) },
+      { name: "Granada", percentage: Math.min(15, Math.floor((composition.iron + composition.mg) / 3)) },
+      { name: "Estaurolita", percentage: Math.min(10, Math.floor(temperature / 80)) }
+    ],
+    "Gnaisse": [
+      { name: "Quartzo", percentage: 20 + Math.min(20, Math.floor(composition.silica / 4)) },
+      { name: "Feldspato K", percentage: 15 + Math.min(15, Math.floor(composition.k * 5)) },
+      { name: "Plagioclásio", percentage: 15 + Math.min(15, Math.floor(composition.na * 5)) },
+      { name: "Biotita", percentage: Math.min(15, Math.floor(composition.iron * 2)) },
+      { name: "Granada", percentage: Math.min(10, Math.floor((composition.iron + composition.mg) / 5)) }
+    ]
+  };
+
+  // Retornar minerais para o tipo de rocha especificado, ou minerais genéricos se não for encontrado
+  return mineralMaps[rockType] || [
+    { name: "Minerais silicáticos", percentage: Math.floor(composition.silica / 2) },
+    { name: "Minerais aluminosos", percentage: Math.floor(composition.alum / 2) },
+    { name: "Minerais ferromagnesianos", percentage: Math.floor(composition.iron * 2) },
+    { name: "Minerais cálcicos", percentage: Math.floor(composition.ca * 2) },
+    { name: "Outros minerais", percentage: 10 + Math.floor(composition.other * 3) }
+  ];
+}
+
+// Gerar descrição do processo - Atualizado com novos dados P-T
+function generateProcessDescription(rockType) {
+  if (temperature >= 600) {
+    if (rockType === "Ultramáfica") {
+      return `Magma ultramáfico formado em ${temperature}°C e ${pressure} kbar, extremamente rico em magnésio (MgO>${composition.mg}%) e pobre em sílica (SiO₂~${composition.silica}%). Esta composição é típica de magmas do manto superior, formando rochas com abundância de minerais ferromagnesianos como olivina e piroxênio. O intervalo ideal de temperatura para esta rocha é 1000-1450°C com pressão entre 5-40 kbar.`;
+    } else if (pressure < 3) {
+      return `Este magma com ${temperature}°C e baixa pressão (${pressure} kbar) solidificou rapidamente próximo ou na superfície terrestre, formando uma rocha ígnea vulcânica com SiO₂~${composition.silica}%. O resfriamento rápido resultou em cristais finos, textura afanítica ou vítrea. ${rockType === "Basalto" ? "O intervalo ideal de temperatura para basaltos é 1000-1300°C." : rockType === "Andesito" ? "O intervalo ideal de temperatura para andesitos é 900-1150°C." : rockType === "Dacito" ? "O intervalo ideal de temperatura para dacitos é 750-1000°C." : "O intervalo ideal de temperatura para riolitos é 650-950°C."}`;
+    } else {
+      return `Este magma com ${temperature}°C resfriou lentamente em alta pressão (${pressure} kbar) abaixo da superfície terrestre, permitindo a formação de cristais bem desenvolvidos. Esta intrusão magmática formou uma rocha ígnea plutônica com SiO₂~${composition.silica}%. ${rockType === "Gabro" ? "O intervalo ideal de temperatura para gabros é 850-1250°C." : rockType === "Diorito" ? "O intervalo ideal de temperatura para dioritos é 750-1050°C." : rockType === "Granodiorito" ? "O intervalo ideal de temperatura para granodioritos é 650-950°C." : "O intervalo ideal de temperatura para granitos é 600-900°C."}`;
+    }
+  } else if (temperature < 50 && pressure < 1) {
+    let sedimentaryProcess = "";
+    if (rockType.includes("Evaporito")) {
+      sedimentaryProcess = "evaporação de água do mar em bacias restritas";
+    } else if (rockType === "Calcário") {
+      sedimentaryProcess = "precipitação química e/ou acúmulo de esqueletos carbonáticos de organismos marinhos";
+    } else if (rockType === "Argilito") {
+      sedimentaryProcess = "deposição de partículas muito finas em ambientes de baixa energia";
+    } else if (rockType === "Siltito") {
+      sedimentaryProcess = "deposição de partículas de silte em ambientes de energia moderada";
+    } else if (rockType === "Arenito") {
+      sedimentaryProcess = "deposição de areia em ambientes como praias, rios ou dunas";
+    } else {
+      sedimentaryProcess = "deposição de cascalho em ambientes de alta energia como leques aluviais ou rios de montanha";
     }
     
-    // Inicializar simulação
-    window.onload = function() {
-      simulateRockFormation();
-    };
-  </script>
-</body>
-</html>
+    return `Material sedimentar depositado em um ambiente de baixa temperatura (${temperature}°C) e baixa pressão (${pressure} kbar). A formação ocorreu por ${sedimentaryProcess}. Os sedimentos originais sofreram compactação e cimentação para formar esta rocha sedimentar.`;
+  } else {
+    let metamorphicGrade = "";
+    if (temperature < 400) {
+      metamorphicGrade = "muito baixo a baixo grau";
+    } else if (temperature < 500) {
+      metamorphicGrade = "baixo a médio grau";
+    } else if (temperature < 650) {
+      metamorphicGrade = "médio a alto grau";
+    } else {
+      metamorphicGrade = "alto grau";
+    }
+    
+    let metamorphicEnvironment = "";
+    if (pressure > 8) {
+      metamorphicEnvironment = "zona de subducção";
+    } else if (pressure > 5) {
+      metamorphicEnvironment = "colisão continental";
+    } else {
+      metamorphicEnvironment = "metamorfismo regional";
+    }
+    
+    return `Rocha pré-existente submetida a temperatura moderada a alta (${temperature}°C) e pressão elevada (${pressure} kbar), causando recristalização metamórfica de ${metamorphicGrade}. Este metamorfismo ocorreu provavelmente em zona de ${metamorphicEnvironment}. ${rockType === "Ardósia" ? "O intervalo ideal para ardósias é 200-400°C com pressão 1-5 kbar." : rockType === "Filito" ? "O intervalo ideal para filitos é 300-500°C com pressão 2-6 kbar." : rockType === "Xisto" ? "O intervalo ideal para xistos é 400-650°C com pressão 3-10 kbar." : rockType === "Gnaisse" ? "O intervalo ideal para gnaisses é 550-800°C com pressão 4-12 kbar." : rockType === "Mármore" ? "O intervalo ideal para mármores é 350-700°C com pressão 2-10 kbar." : "O intervalo ideal para quartzitos é 400-750°C com pressão 3-12 kbar."}`;
+  }
+}
+
+// Renderizar gráfico de minerais
+function renderMineralChart() {
+  const chart = document.getElementById('mineralsChart');
+  chart.innerHTML = '';
+  
+  minerals.forEach(mineral => {
+    const barContainer = document.createElement('div');
+    barContainer.className = 'mineral-bar';
+    
+    const nameLabel = document.createElement('div');
+    nameLabel.className = 'mineral-name';
+    nameLabel.textContent = mineral.name;
+    
+    const barOuter = document.createElement('div');
+    barOuter.className = 'bar-container';
+    
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.width = mineral.percentage + '%';
+    
+    const valueLabel = document.createElement('div');
+    valueLabel.className = 'bar-value';
+    valueLabel.textContent = mineral.percentage + '%';
+    
+    barOuter.appendChild(bar);
+    barContainer.appendChild(nameLabel);
+    barContainer.appendChild(barOuter);
+    barContainer.appendChild(valueLabel);
+    
+    chart.appendChild(barContainer);
+  });
+}
+
+// Simular formação da rocha
+function simulateRockFormation() {
+  rockType = determineRockType();
+  minerals = determineMinerals(rockType);
+  processDescription = generateProcessDescription(rockType);
+  
+  // Atualizar interface
+  document.getElementById('rockName').textContent = rockType;
+  
+  let category = '';
+  if (temperature >= 600) {
+    category = 'Rocha Ígnea' + (pressure < 3 ? ' (Vulcânica)' : ' (Plutônica)');
+  } else if (temperature < 50 && pressure < 1) {
+    category = 'Rocha Sedimentar';
+  } else {
+    category = 'Rocha Metamórfica';
+  }
+  
+  document.getElementById('rockCategory').textContent = category;
+  document.getElementById('processDescription').textContent = processDescription;
+  renderMineralChart();
+}
+
+// Inicializar simulação
+window.onload = function() {
+  simulateRockFormation();
+};
