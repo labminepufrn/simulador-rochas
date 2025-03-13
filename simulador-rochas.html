@@ -189,10 +189,10 @@
           <label class="slider-label">Temperatura: <span id="tempLabel">800</span>°C</label>
           <input id="tempSlider" type="range" min="25" max="1200" value="800" class="slider" oninput="updateTemperature()">
           <div class="slider-marks">
-            <span>Amb</span>
-            <span>Sed</span>
-            <span>Met</span>
-            <span>Mag</span>
+            <span>Ambiente</span>
+            <span>Sedimentar</span>
+            <span>Metamórfico</span>
+            <span>Magmático</span>
           </div>
         </div>
         
@@ -566,7 +566,7 @@
         if (rockType === "Ultramáfica") {
           return `Magma ultramáfico com ${temperature}°C e ${pressure} kbar, extremamente rico em magnésio (MgO>${composition.mg}%) e pobre em sílica (SiO₂~${composition.silica}%). Esta composição é típica de magmas do manto superior, formando rochas com abundância de minerais ferromagnesianos como olivina e piroxênio.`;
         } else if (pressure < 3) {
-          return `Este magma com ${temperature}°C e baixa pressão (${pressure} kbar) solidificou rapidamente próximo ou na superfície terrestre, formando uma rocha ígnea vulcânica com SiO₂~${composition.silica}%. O resfriamento rápido resultou em cristais finos ou textura parcialmente vítrea.`;
+          return `Este magma com ${temperature}°C e baixa pressão (${pressure} kbar) solidificou rapidamente próximo ou na superfície terrestre, formando uma rocha ígnea vulcânica com SiO₂~${composition.silica}%. O resfriamento rápido resultou em cristais finos, textura afanítica ou vítrea.`;
         } else {
           return `Este magma com ${temperature}°C resfriou lentamente em alta pressão (${pressure} kbar) abaixo da superfície terrestre, permitindo a formação de cristais bem desenvolvidos. Esta intrusão magmática formou uma rocha ígnea plutônica com SiO₂~${composition.silica}%.`;
         }
